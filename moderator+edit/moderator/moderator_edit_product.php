@@ -9,28 +9,51 @@ $errors = [];
 
 // Sprawdzenie, czy parametr 'id' został przekazany w adresie URL
 if (isset($_GET['id'])) {
-    // Pobranie wartości 'id' i przypisanie ich do zmiennej
-    $productId = $_GET['id'];
+		// Pobranie wartości 'id' i przypisanie ich do zmiennej
+		$productId = $_GET['id'];
 
-    // Sprawdzenie, czy formularz został przesłany
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        // Pobranie wartości pól z formularza
-        $productName = $_POST['product_name'];
-        $category = $_POST['product_category'];
-        $description = $_POST['product_description'];
-        $price = $_POST['product_price'];
-        $color = $_POST['product_color'];
-        $image = $_POST['product_image'];
-        // Aktualizacja produktu w bazie danych
-        $query = $db->prepare("UPDATE products SET product_name = ?, product_category = ?, product_description = ?, product_price = ?, product_color = ?, product_image = ? WHERE product_id = ?");
-        $query->bind_param("sssdssi", $productName, $category, $description, $price, $color, $image ,$productId);
-        $query->execute();
-        $query->close();
+		// Sprawdzenie, czy formularz został przesłany
+		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+				// Pobranie wartości pól z formularza
+				$productName = $_POST['product_name'];
+				$category = $_POST['product_category'];
+				$description = $_POST['product_description'];
+				$price = $_POST['product_price'];
+				$color = $_POST['product_color'];
+				$image = $_POST['product_image'];
+				// Aktualizacja produktu w bazie danych
+				$query = $db->prepare("UPDATE products SET product_name = ?, product_category = ?, product_description = ?, product_price = ?, product_color = ?, product_image = ? WHERE product_id = ?");
+				$query->bind_param("sssdssi", $productName, $category, $description, $price, $color, $image ,$productId);
+				$query->execute();
+				$query->close();
+				if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
+						$imageFile = $_FILES['product_image']['tmp_name'];
 
-        // Przekierowanie na inną stronę po zakończeniu aktualizacji
-        header('Location: moderator_edit_product.php');
-        exit;
+						// Wygeneruj unikalną nazwę dla nowego pliku obrazu
+						$newImageName = uniqid('product_') . '.jpg';
+
+						// Ścieżka do zapisu nowego pliku obrazu
+						$newImagePath = '../assets/images/' . $newImageName;
+
+						// Przenieś przesłane zdjęcie do docelowej lokalizacji
+						move_uploaded_file($imageFile, $newImagePath);
+
+						// Aktualizuj ścieżkę obrazu produktu w bazie danych
+						$query = $db->prepare("UPDATE products SET product_image = ? WHERE product_id = ?");
+						$query->bind_param("si", $newImageName, $productId);
+						$query->execute();
+						$query->close();
+
+						// Usuń poprzednie zdjęcie, jeśli istnieje
+						$previousImagePath = '../assets/images/' . basename($image);
+						if (file_exists($previousImagePath)) {
+								unlink($previousImagePath);
+						}
 				}
+				// Przekierowanie na inną stronę po zakończeniu aktualizacji
+				header('Location: moderator_edit_product.php');
+				exit;
+		}
 
 }
 ?>

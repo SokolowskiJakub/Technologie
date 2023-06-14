@@ -7,6 +7,7 @@ include('../server/connection.php');
 
 $errors = [];
 
+
 // Sprawdzenie, czy parametr 'id' został przekazany w adresie URL
 if (isset($_GET['id'])) {
     // Pobranie wartości 'id' i przypisanie ich do zmiennej
@@ -26,7 +27,30 @@ if (isset($_GET['id'])) {
         $query->bind_param("sssdssi", $productName, $category, $description, $price, $color, $image ,$productId);
         $query->execute();
         $query->close();
+        if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
+            $imageFile = $_FILES['product_image']['tmp_name'];
 
+            // Wygeneruj unikalną nazwę dla nowego pliku obrazu
+            $newImageName = uniqid('product_') . '.jpg';
+
+            // Ścieżka do zapisu nowego pliku obrazu
+            $newImagePath = '../assets/images/' . $newImageName;
+
+            // Przenieś przesłane zdjęcie do docelowej lokalizacji
+            move_uploaded_file($imageFile, $newImagePath);
+
+            // Aktualizuj ścieżkę obrazu produktu w bazie danych
+            $query = $db->prepare("UPDATE products SET product_image = ? WHERE product_id = ?");
+            $query->bind_param("si", $newImageName, $productId);
+            $query->execute();
+            $query->close();
+
+            // Usuń poprzednie zdjęcie, jeśli istnieje
+            $previousImagePath = '../assets/images/' . basename($image);
+            if (file_exists($previousImagePath)) {
+                unlink($previousImagePath);
+										}
+								}
         // Przekierowanie na inną stronę po zakończeniu aktualizacji
         header('Location: admin_edit_product.php');
         exit;
