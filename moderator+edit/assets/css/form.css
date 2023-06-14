@@ -1,0 +1,28 @@
+form {
+    width:200px;
+    display: flex;
+    flex-direction: column;
+}
+
+form label {
+    display: inline-block;
+    margin-bottom: 5px;
+}
+
+form input,
+form textarea {
+    padding: 5px;
+    margin-bottom: 10px;
+}
+
+form input[type="submit"] {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+form input[type="submit"]:hover {
+    background-color: #45a049;
+}
